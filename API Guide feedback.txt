@@ -1,0 +1,705 @@
+Mobile API GUIDE 2.0.0
+
+all functions return a json formatted object with the following definition:
+{ "type": "object", 
+	"properties" : {  
+	 "status" : {"type" : "string"},
+	 "errCode" : {"type" : "integer", "minLength" : 3, "maxLength": 3},
+	 "msg" : {"type" : "string"},
+	 "data" {"type" : "object"}
+	} 
+}
+
+all successful responses will have a status of "suc", and an error code of 000.  Otherwise, status will be set to lgd, wrn or err, with a corresponding error code.
+
+
+############################################################################################
+
+	+ Channel API [ATTRIBUTE: NOTLOGGEDIN/LOGGEDIN]['GET'] 	*This does not follow our standard json formatted object definition* 
+
+		HTTP Request:
+			http://msmu.me/api/channels
+
+		Parameters:
+			- NONE
+				
+		Response: 
+			JSON ARRAY
+			[
+				- fullName		-> (STRING) 	-> Full Channel Name 
+				- shortName		-> (STRING)		-> Shortened Version of Channel Name 
+				- chanID		-> (INT)		-> The Channel ID (Channel #)
+				- desc			-> (STRING)		-> Information About the Channel (explanation about the channel)
+				- streamURL		-> (STRING)		-> The URL to tune in for RTMP Streaming
+				- logo			-> (STRING)		-> URL to the IMAGE
+			]
+		
+		Response Example: 
+			[
+			   {
+				  "id":"1",
+				  "fullName":"Vox Nation",
+				  "shortName":"Vox Nation",
+				  "chanID":"1",
+				  "desc":"INFO",
+				  "streamURL":"rtmp:\/\/streaming.msmu.me\/live\/region1chan001.stream"
+			   },
+			   {
+				  "id":"2",
+				  "fullName":"Brass",
+				  "shortName":"Brass",
+				  "chanID":"2",
+				  "desc":"INFO",
+				  "streamURL":"rtmp:\/\/streaming.msmu.me\/live\/region1chan002.stream"
+			   }
+			]
+		
+		Error Codes: 
+			none
+
+
+############################################################################################
+
+
+
+	   + Login API [ATTRIBUTE: NOTLOGGEDIN]['POST']
+
+        HTTP Request:
+            http://msmu.me/api/login
+
+        Parameters:
+            - username        		-> (STRING)        -> The Username of the user to sign in
+            - password        		-> (STRING)        -> The Password of the user to sign in
+            - remember        		-> (BOOL)          -> {TRUE | FALSE} *Optional*
+           
+        Parameters Example:
+            "username":"<username>",
+            "password":"<password>",
+            "remember":true
+                  
+        Success Response:
+        - status             		-> "suc"
+        - errorCode     			-> "0"
+        - msg                 		-> "success"
+        - data                 		-> "social"
+   
+        Session info:
+        - id
+        - username
+        - accountType 				-> one of "Basic", "Pro", "Plus", "Corp", "Vox"
+        - remember         			-> "on"
+        - time                 		-> "1395332310"
+   
+        Failure Response:
+        - status             		-> "err"
+        - errorCode     			-> "101"
+        - msg                     	-> "invalid credentials"
+
+
+
+############################################################################################
+
+
+
+   
+    + Logout API [ATTRIBUTE: LOGGEDIN]['POST']
+
+        HTTP Request:
+            http://msmu.me/api/logout
+
+        Parameters:
+            - userId        		-> (INT)        	-> The UserId to verify the user that is to be logged out.
+           
+        Parameters Example:
+            "userId":10004234
+                  
+        Success Response:
+        - status             		-> "suc"
+        - errorCode     			-> "0"
+        - msg                 		-> "signed out"
+        - data                 		-> ""
+   
+        Failure Response:
+        - status             		-> "lgd"
+        - data                 		-> "sign-in"
+        
+        
+        
+############################################################################################
+   
+   
+   
+    + Comment on Film API [ATTRIBUTE: LOGGEDIN]['GET']
+   
+        HTTP Request:
+            http://msmu.me/api/filmcomment
+
+        Parameters:
+            - comment        		-> (STRING)        	-> Comment that the user wishes to place forward
+            - chanId        		-> (INT)        	-> Channel ID for the channel that the person is connected to. (0 if ondemand)
+            - videoId        		-> (INT)        	-> The video ID from MetaData or from On-Demand Selection
+       
+        Parameters Example:
+            "comment":"STRING",
+            "videoId":1
+
+		Success Response:
+		- status             			-> "suc"
+		- errorCode         			-> "0"
+		- msg                     		-> "success"
+		- data                 			-> ""
+	   
+		Failure Responses:
+		- status                 		-> "lgd"
+		- data                    		-> "sign-in"
+	   
+		- status                 		-> "err"
+		- errorCode         			-> "509"
+		- msg                     		-> "ERROR: Unable to get current schedule!"
+		- data
+			- chanid             			-> "4"
+			- video'             			-> "false"
+
+
+
+############################################################################################
+
+    + Retrieve film id (DEPRICATED GRAB FROM FILM METADATA OR ON-DEMAND VIDEOID)
+
+        HTTP Request:
+            http://msmu.me/api/getFilmId 
+
+        Parameters:
+            - chanid        		-> (INT)        -> Channel ID for the channel that the person is connected to.
+       
+        Parameters Example:
+            "chanid":1
+
+        Succesful Response:
+		    - status         		-> "suc"
+		    - errorCode      		-> "0"
+		    - msg            		-> "success"
+		    - data
+		    	- filmId         		-> "01000000885"
+   
+        Failure Responses:
+		    - status              	-> "err"
+		    - errorCode     	  	-> "511"
+		    - msg                 	-> "ERROR: Incorrect Channel ID!"
+		    - data
+		    	- chanid          	  	-> "4"
+   
+		    - status              	-> "err"
+		    - errorCode     	  	-> "510"
+		    - msg                 	-> "ERROR: No channel ID!"
+		    - data               	-> ""
+		    
+		    - status 				-> "err"
+		    - errorCode				-> 509
+		    -> msg					-> ERROR: UNABLE TO GET CURRENT SCHEDULE
+		    -> data					-> chanID
+
+
+############################################################################################
+
+
+
+    + Load Film Comments  [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['GET']
+
+        HTTP Request:
+            http://msmu.me/api/getFilmComments
+
+        Parameters:
+            - videoId        		-> (INT)        -> ID for the video to get the comments for.
+       
+        Parameters Example:
+            "videoId":1
+                  
+        Response: on success, will return success status, with data being an array of objects with the following format:
+   
+        - DATE_CREATED        		-> (STRING)     -> Date/time string when the post was made
+        - ID                		-> (INT)        -> the post id
+        - MESSAGE            		-> (STRING)     -> the post's message contents
+        - PHOTO                		-> (STRING)     -> the posters profile photo path
+        - USERID            		-> (INT)        -> the posters userid
+        - firstName            		-> (STRING)     -> the posters first name
+        - lastName            		-> (STRING)     -> the posters last name
+   
+        Success Response:
+        - status             		-> "suc"
+        - data
+            - 0
+                - ID                -> "00000000088"
+                - USERID            -> "00000000009"
+                - albumId           -> "0000000000099"
+                - PHOTOID           -> NULL
+                - MESSAGE           -> "who is the Artist for this movie?"
+                - DATE_CREATED     	-> "2013-11-22 13:27:07"
+                - DELETED           -> "N"
+                - firstName         -> "Adam"
+                - lastName          -> "Clarke"
+            - 1
+                - ID                -> "00000000089"
+                - USERID            -> "00001000036"
+                - albumId           -> "0000000000099"
+                - PHOTOID           -> NULL
+                - MESSAGE           -> "Testing of this comment it was a great movie"
+                - DATE_CREATED 		-> "2013-11-22 13:18:30"
+                - DELETED  	        -> "N"
+                - firstName         -> "play"
+                - lastName          -> "nsync"
+        etc. etc.
+
+        Failure Responses:
+        - status                    -> "wrn"
+        - errorCode                 -> "200"
+        - msg                       -> "No comments"
+        - data
+        	- videoId                 -> "01000000886"
+   
+        - status                    -> "err"
+        - errorCode                 -> "512"
+        - msg                       -> "ERROR: No video ID!"
+        - data                      -> ""
+   
+   
+   
+   
+############################################################################################
+                   
+                   
+                   
+    + Allowed to vote API [ATTRIBUTE: LOGGEDIN]['POST'] (DEPRICATED) Just allow all to vote ONCE per Video. Use VOTE DIRECTLY
+
+        HTTP Request:
+            http://msmu.me/api/allowedtovote
+
+        Parameters:
+            - chanid        -> (INT)        -> Channel ID for the channel that the person is connected to.
+       
+        Parameters Example:
+            "chanid":1
+
+        Success Responses:
+		    - status                -> "suc"
+		    - errorCode             -> "0"
+		    - msg                   -> "success"
+		    - data
+		    	- allowed           	-> "0"
+
+						- OR - 					
+					
+		    - status                -> "suc"
+		    - errorCode             -> "0"
+		    - msg                   -> "success"
+		    - data
+		    	- allowed             	-> "1"
+
+        Failure Response:
+		    - status                -> "err"
+		    - errorCode             -> "510"
+		    - msg                   -> "ERROR: No channel ID!"
+		    - data                  -> ""
+   
+   
+   
+############################################################################################
+
+
+
+    + Vote API [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['POST']
+
+        HTTP Request:
+            http://msmu.me/api/vote
+
+        Parameters:
+            - vote            	-> (INT)        -> Between 1 - 10 (Their Vote) REQUIRED
+            - chanId        	-> (INT)        -> Channel ID for the channel that the person is connected to if applicable (DO NOT SEND IF ONDEMAND)
+            - videoId			-> (INT) 		-> Video ID for the video the person is watching (check metadata or ondemand info) REQUIRED
+           
+        Parameters Example:
+            "vote":3,
+            "chanId":1,
+            "videoId":1,
+
+            
+        Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":""}
+			
+			{"status":"err","errorCode":514,"msg":"ERROR: Captcha mis-match with what was displayed in the box!","data":""}
+			
+			{"status":"err","errorCode":515,"msg":"ERROR: Could not add vote to database your must of been rejected!","data":""}
+
+
+
+
+############################################################################################
+
+
+	
+	
+	+ Advertising Schedule [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['GET']
+		READ META DATA FROM STREAM: CALLED THIS:
+		
+		http://revive.msmu.me/www/delivery/fc.php?script=bannerTypeHtml:vastInlineBannerTypeHtml:vastInlineHtml&format=vast&zones=1&source=&secs=120
+
+
+
+
+
+
+############################################################################################
+
+
+
+		
+	+ Start Vote Window API [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['POST']
+		HTTP Request:
+			http://msmu.me/api/startVoteWindow
+
+		Parameters:
+			- chanId		-> (INT)		-> Channel ID for the channel that the person is connected to.
+				
+		Parameters Example:
+			"chanId":1
+		
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":{"vote_chan":1,"vote_time":1395419996}}
+			
+			{"status":"err","errorCode":513,"msg":"ERROR: The input channel is incorrect or does not match our channel list!","data":""}
+		
+		Error Codes: 
+			MSMU_INVALID_CHANNEL - {"status":"err","errorCode":513,"msg":"ERROR: The input channel is incorrect or does not match our channel list!","data":""} 
+					The channel ID is incorrect. 
+
+
+
+
+############################################################################################
+
+
+
+
+
+	
+	+ Show Vote Window API [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['POST']
+		HTTP Request:
+			http://msmu.me/api/showVoteWindow
+
+		Parameters:
+			- chanId		-> (INT)		-> Channel ID for the channel that the person is connected to.
+				
+		Parameters Example:
+		
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+				- vote_time (seconds since epoch at what time did you start vote window)
+				- vote_chan (what channel number) 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":{"vote_time":false,"vote_chan":false}}     => NOTHING STARTED
+			
+			{"status":"suc","errorCode":0,"msg":"success","data":{"vote_time":1395419996,"vote_chan":1}}    => SOMETHING STARTED FOR CHANNEL
+		
+
+
+############################################################################################
+
+
+
+
+	
+	+ REGISTRATION API [ATTRIBUTE: NOTLOGGEDIN]['POST']		
+				
+		HTTP Request:
+			http://msmu.me/api/register
+
+		Parameters:
+			- username 		-> (String)
+			- firstName 	-> (String)
+			- lastName		-> (String)
+			- email 		-> (String)
+			- password		-> (String) Password for their account 
+			- month			-> (INT) Month of their date of birth (4)
+			- day			-> (INT) day in 2 digit format (25)
+			- year			-> (INT) Year of Their DOB (1985) 
+			- gender		-> (String) "Male" or "Female"
+				
+		Parameters Example:
+			- username 		-> TheWarrior
+			- firstName 	-> John
+			- lastName		-> Smith
+			- email 		-> johnsmith@hotmail.com
+			- password		-> password1234
+			- month			-> 4
+			- day			-> 25
+			- year			-> 1985 
+			- gender		-> Male
+				
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":""}
+		
+		Error Codes: 
+			NONE
+								
+								
+								
+############################################################################################
+
+
+
+
+	
+	+ Cancel Vote Window API [ATTRIBUTE: NOTLOGGEDIN|LOGGEDIN]['POST']		
+				
+		HTTP Request:
+			http://msmu.me/api/cancelVoteWindow
+
+		Parameters:
+			- NONE
+				
+		Parameters Example:
+
+		
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":""}
+		
+		Error Codes: 
+			NONE
+								
+								
+								
+############################################################################################
+	
+	
+	
+	
+	+ Remote Control API [ATTRIBUTE: LOGGEDIN]['POST']
+		HTTP Request:
+			http://msmu.me/api/remoteControl
+
+		Parameters:
+			- chanId		-> (INT)		-> Channel ID for the channel that the person is connected to.
+			- remote		-> (Key/Pair Array)	-> This is sent as a key pair for which ever remote portion to change, as indicated in the JSON object. 
+							=> REMOTE('chanUp' => false, 'chanDown' => false, 'volDown' => false, 'volUp' => false, 'mute' => false)
+				
+		Parameters Example:
+			"chanId":1,
+			"remote":{
+			  "chanUp":false,
+			  "chanDown":false,
+			  "volDown":false,
+			  "volUp":false,
+			  "mute":false
+			}
+		
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{"status":"suc","errorCode":0,"msg":"success","data":""}
+		
+		Error Codes: 
+			MSMU_INPUT_MISMATCH - {"status":"err","errorCode":508,"msg":"ERROR: The input you used does that match what we expected!","data":""} 
+					The input that was given does not match what we expect (missing post/get variables in form-data)
+					
+			MSMU_INPUT_JSON_EXPECTED - {"status":"err","errorCode":509,"msg":"ERROR: Input of JSON Expected but non-given!","data":""} 
+					Remote is expected to be json so when inputing the data make sure it is in json format
+					
+			MSMU_INPUT_INVALID_JSON - {"status":"err","errorCode":511,"msg":"ERROR: The JSON object given does not match what is expected!","data":""} 
+					The input for the json object is not in a format we expect, please look at layout. 
+					
+			CANNOT UPDATE DATA - {"status":"err","errorCode":512,"msg":"ERROR: The data could not be updated or pushed!","data":""} 
+					The data cannot be pushed to the client so therefore network error to push to client. 
+
+
+
+
+
+############################################################################################
+
+
+	+ OnDemand API [ATTRIBUTE: LOGGEDIN/LOGGEDOUT]['GET']
+		HTTP Request:
+			http://msmu.me/api/ondemand
+			
+		Parameters:
+			- stream		-> ('hls'/'rtmp')	-> This lets you select the stream type that you wish to use 'hls' or 'rtmp', defaults to rtmp
+			- page			-> (INT)			-> The page that you are requesting 
+			- search 		-> (STRING)			-> Allow for search of videos that are on On-demand
+			- limit			-> (INT)			-> The number of items per page, default is 5 if left out or set to false, a value in range of 1-50.
+			- filter		-> (STRING) 		=> 'new', 'watched', 'popular', 'staff' -> (This filters newest, or things they have watched (only if signed in), popular items, or staff picks 
+			- genre			-> (INT)			-> The ID of the genre that was selected from the genre selection list
+				
+		Parameters Example:
+			http://msmu.me/api/ondemand?&stream=hls&page=2&limit=3&genre=15&filter=new
+			
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{
+			   "status":"suc",
+			   "errorCode":0,
+			   "msg":"success",
+			   "data":{
+				  "page":2,
+				  "filter":false,
+				  "genre":"15",
+				  "limit":"3",
+				  "results":3,
+				  "demand":[
+					 {
+						"id":"47",
+						"name":"Paradise",
+						"posterImage":"http:\/\/assets.msmu.me\/images\/m\/msmu_poster.jpg",
+						"vodurl":"http:\/\/streaming.msmu.me:1935\/vod\/mp4:storagec\/video\/47_Paradise_480.mp4\/manifest.f4m"
+					 },
+					 {
+						"id":"46",
+						"name":"Oma's Quilt",
+						"posterImage":"http:\/\/assets.msmu.me\/images\/m\/msmu_poster.jpg",
+						"vodurl":"http:\/\/streaming.msmu.me:1935\/vod\/mp4:storagec\/video\/46_OmasQuilt_480.mp4\/manifest.f4m"
+					 },
+					 {
+						"id":"43",
+						"name":"Louise ",
+						"posterImage":"http:\/\/assets.msmu.me\/images\/m\/msmu_poster.jpg",
+						"vodurl":"http:\/\/streaming.msmu.me:1935\/vod\/mp4:storagec\/video\/43_Louise_480.mp4\/manifest.f4m"
+					 }
+				  ]
+			   }
+			}
+		
+		Error Codes: 
+			MSMU_GENRE_EXIST - {"status":"err","errorCode":534,"msg":"ERROR: Genre selected does not exist!","data":{"genre":"17"}}
+					The Genre ID selected is non-existant
+		
+		
+		
+		
+############################################################################################
+
+
+
+		
+	+ OnDemand API [ATTRIBUTE: LOGGEDIN/LOGGEDOUT]['GET']
+		HTTP Request:
+			http://msmu.me/api/listgenre
+			
+		Parameters:
+			- NONE
+				
+		Parameters Example:
+			http://msmu.me/api/listgenre
+			
+		Response: 
+			- status		-> suc, err, wrn (the level of the message)
+			- errorCode		-> The code associated to the error if any error 
+			- msg			-> The message for debugging purposes. 
+			- data  		-> Any Data Sent back to the client if applicable. 
+		
+		Response Example: 
+			{
+			   "status":"suc",
+			   "errorCode":0,
+			   "msg":"success",
+			   "data":[
+				  {
+					 "id":"1",
+					 "name":"Action Adventure"
+				  },
+				  {
+					 "id":"2",
+					 "name":"Anime"
+				  },
+				  {
+					 "id":"3",
+					 "name":"Arts & Entertainment"
+				  },
+				  {
+					 "id":"4",
+					 "name":"Comedy"
+				  },
+				  {
+					 "id":"5",
+					 "name":"Classics"
+				  },
+				  {
+					 "id":"6",
+					 "name":"Documentaries"
+				  },
+				  {
+					 "id":"7",
+					 "name":"Drama"
+				  },
+				  {
+					 "id":"8",
+					 "name":"Family"
+				  },
+				  {
+					 "id":"9",
+					 "name":"Horror"
+				  },
+				  {
+					 "id":"10",
+					 "name":"Romance"
+				  },
+				  {
+					 "id":"11",
+					 "name":"Sci-fi & Fantasy"
+				  },
+				  {
+					 "id":"12",
+					 "name":"Sports"
+				  },
+				  {
+					 "id":"13",
+					 "name":"Thriller"
+				  },
+				  {
+					 "id":"14",
+					 "name":"TV Series"
+				  },
+				  {
+					 "id":"15",
+					 "name":"Animation"
+				  }
+			   ]
+			}
+		
+		Error Codes: 
+			NONE... ERROR if could not open page	
